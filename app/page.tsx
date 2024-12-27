@@ -16,7 +16,12 @@ export default function AIChatInterface() {
         className="flex-grow mb-4 border rounded-md p-4"
       >
         {messages.map((message) => (
-          <div key={message.id}>
+          <div
+            key={message.id}
+            className={`mb-10 border-b ${
+              message.role !== "user" ? "text-red-700" : ""
+            }`}
+          >
             {message.role === "user" ? "User: " : "AI: "}
             {message.content}
           </div>
