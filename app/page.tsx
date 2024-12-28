@@ -4,9 +4,52 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChat } from "ai/react";
+import { useEffect, useRef, useState } from "react";
+
+declare global {
+  interface Window {
+    webkitSpeechRecognition: unknown;
+  }
+}
 
 export default function AIChatInterface() {
   const { messages, input, handleInputChange, handleSubmit } = useChat({});
+  const [toggleMic, setToggleMic] = useState(false);
+  // const [isRecordingComplete, setIsRecordingComplete] = useState(false);
+  const [transcript, setTranscript] = useState("");
+
+  const recognitionRef = useRef<null | SpeechRecognition>(null);
+
+  async function handleStartRecording() {
+    setToggleMic(true);
+    recognitionRef.current = new window.webkitSpeechRecognition();
+    recognitionRef.current.lang = "en-US";
+    recognitionRef.current.continuous = true;
+    recognitionRef.current.interimResults = true;
+    recognitionRef.current.onresult = (e) => {
+      const { transcript } = e.results[e.results.length - 1][0];
+      setTranscript(transcript);
+    };
+    recognitionRef.current.start();
+  }
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+  async function handleStopRecording() {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setToggleMic(false);
+    }
+  }
+
+  useEffect(() => {
+    console.log(transcript);
+  }, [transcript]);
 
   return (
     <div className="flex flex-col h-screen max-w-2xl mx-auto p-4">
@@ -37,7 +80,13 @@ export default function AIChatInterface() {
           onChange={handleInputChange}
         />
         <Button type="submit">Send</Button>
+        <Button
+          onClick={toggleMic ? handleStopRecording : handleStartRecording}
+        >
+          {toggleMic ? "Stop Mic" : "Start Mic"}
+        </Button>
       </form>
+      {transcript}
     </div>
   );
 }
