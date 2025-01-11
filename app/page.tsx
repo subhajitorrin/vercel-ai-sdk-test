@@ -73,6 +73,30 @@ export default function AIChatInterface() {
     console.log(conversation);
   }, [conversation]);
 
+  const speakText = async (data: string) => {
+    try {
+      const response = await axios.post(
+        "/api/speak",
+        {
+          text: data
+        },
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        console.log("Text has been spoken.");
+      } else {
+        console.error("Error:", response.status, response.data);
+      }
+    } catch (error) {
+      console.error("Error speaking text:", error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!currentText) return;
@@ -83,6 +107,7 @@ export default function AIChatInterface() {
         role: "user",
         content: currentText
       };
+      setcurrentText("");
 
       const updatedMessages = [...conversation.messages, newMessage];
 
@@ -107,12 +132,11 @@ export default function AIChatInterface() {
         ...prevConversation,
         messages: [...prevConversation.messages, aiResponse]
       }));
+
+      speakText(data);
     } catch (error) {
       console.error("Error sending message:", error);
     }
-
-    // Clear the input field after submitting the message
-    setcurrentText("");
   };
 
   return (
